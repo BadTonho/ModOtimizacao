@@ -8,6 +8,10 @@ bin/
 run/
 logs/
 crash-reports/
+benchmark/runs/
+benchmark/world/
+benchmark/results/
+benchmark/mods/
 
 # IDEs
 .idea/
