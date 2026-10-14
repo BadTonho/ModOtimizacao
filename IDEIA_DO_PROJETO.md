@@ -65,3 +65,4 @@ O detalhamento passo a passo de cada fase de implementação, critérios de acei
 * **[Escopo]**: Foco confirmado em **Client-Side** (FPS, fluidez visual e renderização). Nome do mod a ser decidido futuramente.
 * **[Governança]**: Estabelecimento das 5 regras fundamentais (Segurança, Documentação Viva, Modularidade, Preservação Vanilla e Client-Side Estrito sem alteração de mundo).
 * **[Planejamento]**: Criação do [ROADMAP.md](file:///c:/Users/Admin/Desktop/ProjetosCode/minecraft/ModOtimização/ROADMAP.md) estruturando as 6 fases de implementação.
+* **[Fase 1 Concluída]**: Configuração do ambiente Fabric Loom 1.18.4 + Gradle 9.7.0 + Java 25, metadados client-side, modularização de pacotes e build validado gerando o JAR `ModOtimizacao-1.0.0-alpha.jar`.

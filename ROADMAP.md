@@ -12,23 +12,24 @@ Plano de execução passo a passo para o desenvolvimento do mod de otimização 
 
 ---
 
-## 🏗️ Fase 1: Alicerce do Projeto (Setup & Arquitetura Base)
+## 🏗️ Fase 1: Alicerce do Projeto (Setup & Arquitetura Base) — ✅ CONCLUÍDO
 **Objetivo:** Ter o ambiente Fabric Loom pronto, compilável e estruturado para receber os módulos.
 
-- [ ] **Configuração do Gradle e Fabric Loom:**
-  - `build.gradle` com suporte ao Java 25 / JVM moderna.
-  - `gradle.properties` com as variáveis de versão (Minecraft 26.3, Loom, Yarn/Mapeamentos).
+- [x] **Configuração do Gradle e Fabric Loom:**
+  - `build.gradle` com suporte ao Java 25 / JVM moderna e Fabric Loom 1.18.4.
+  - `gradle.properties` com as variáveis de versão (Minecraft 26.3, Loom, Loader 0.19.5).
   - `settings.gradle`.
-- [ ] **Metadados do Mod (`fabric.mod.json`):**
-  - Declarar modid provisório (`modotimizacao`).
-  - Definir estritamente `"environment": "client"` (Regra 5).
-- [ ] **Configuração de Mixins (`modotimizacao.mixins.json`):**
-  - Mapear injeções de bytecode para o lado do cliente.
-- [ ] **Esqueleto de Pastas e Pacotes (Regra 3):**
-  - `com.modotimizacao.core`: Classe de inicialização `ClientModInitializer`.
-  - `com.modotimizacao.config`: Estrutura para leitura e persistência de opções.
-  - `com.modotimizacao.modules`: Diretório base para os sub-módulos independentes.
-  - `com.modotimizacao.util`: Utilitários matemáticos e estruturas rápidas.
+- [x] **Metadados do Mod (`fabric.mod.json`):**
+  - Mod ID definido como `modotimizacao`.
+  - Definido estritamente como `"environment": "client"` (Regra 5).
+- [x] **Configuração de Mixins (`modotimizacao.mixins.json`):**
+  - Mapeamento configurado com `"compatibilityLevel": "JAVA_25"`.
+- [x] **Esqueleto de Pastas e Pacotes (Regra 3):**
+  - `com.modotimizacao.core`: Classe de inicialização `ModClientInitializer`.
+  - `com.modotimizacao.config`: `ModConfig` desacoplado.
+  - `com.modotimizacao.modules`: Subpastas `animations`, `culling/blockentity`, `culling/entity`.
+  - `com.modotimizacao.util`: `FrustumUtil`.
+- [x] **Compilação e Verificação:** Executado `./gradlew build` com sucesso gerando o JAR final.
 
 ---
 
