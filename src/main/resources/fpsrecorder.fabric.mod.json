@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "fpsrecorder",
+  "version": "1.0.0",
+  "name": "FPS Recorder",
+  "environment": "client",
+  "mixins": [
+    "fpsrecorder.mixins.json"
+  ]
+}

@@ -16,6 +16,13 @@ repositories {
 
 loom {
     noIntermediateMappings()
+    runs {
+        client {
+            if (file("run/saves/benchmark_world").exists()) {
+                programArgs "--quickPlaySingleplayer", "benchmark_world"
+            }
+        }
+    }
 }
 
 dependencies {
@@ -54,7 +61,24 @@ tasks.named('remapSourcesJar').configure {
 }
 
 jar {
+    exclude "com/modotimizacao/benchmark/**"
+    exclude "fpsrecorder*"
     from("LICENSE") {
         rename { "${it}_${project.archivesBaseName}" }
+    }
+}
+
+task buildFpsRecorder(type: Jar) {
+    archiveBaseName = "fps-recorder"
+    archiveVersion = "1.0.0"
+    destinationDirectory = file("benchmark/tools")
+    from(sourceSets.main.output) {
+        include "com/modotimizacao/benchmark/**"
+    }
+    from("src/main/resources/fpsrecorder.fabric.mod.json") {
+        rename { "fabric.mod.json" }
+    }
+    from("src/main/resources/fpsrecorder.mixins.json") {
+        rename { "fpsrecorder.mixins.json" }
     }
 }

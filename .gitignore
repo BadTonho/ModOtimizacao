@@ -12,6 +12,7 @@ benchmark/runs/
 benchmark/world/
 benchmark/results/
 benchmark/mods/
+benchmark/tools/
 
 # IDEs
 .idea/
