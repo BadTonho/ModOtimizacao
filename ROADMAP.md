@@ -71,12 +71,14 @@ Plano de execução passo a passo para o desenvolvimento do mod de otimização 
 
 ---
 
-## 🎨 Fase 5: Otimização de Interface e Partículas
-**Objetivo:** Melhorar a resposta de menus/inventários e evitar travamentos com partículas.
+## 🎨 Fase 5: Otimização de Interface e Partículas — ✅ CONCLUÍDO
+**Objetivo:** Melhorar a resposta de menus/inventários, aliviar alocações de memória de texto e evitar travamentos com partículas.
 
-- [ ] **Batching de Fontes/HUD:** Agrupar chamadas de desenho de glifos de texto.
-- [ ] **Culling de Partículas:** Descartar partículas criadas atrás de paredes sólidas.
-- [ ] **Limitador Adaptativo de Partículas:** Evitar lag spikes em explosões massivas.
+- [x] **Cache de Largura de Fontes/HUD:** Implementado `FontWidthCache` e `MixinStringSplitter` para acelerar medições de texto repetidas no HUD, menus e scoreboard, eliminando alocações de `MutableFloat` e decomposições de strings por frame.
+- [x] **Culling de Partículas Ocluídas:** Implementado `ParticleCuller`, `ParticleCullCache` e `MixinQuadParticleGroup` para descartar partículas dentro de blocos sólidos ou atrás de paredes, com orçamento seguro de raycasts por frame (máximo 32 raycasts/frame) e proteção de proximidade (<= 3 blocos sempre visível).
+- [x] **Limitador Adaptativo de Partículas:** Implementado `ParticleLimiter` e `MixinParticleEngine` para descartar excessos em explosões massivas (mais de 35 partículas/bloco por tick), prevenindo travamentos e lag spikes de GPU.
+- [x] Opções integradas em `ModConfig` (`optimizeFontAndHud`, `optimizeParticles`, `particleMaxDistance`, `maxParticlesPerBlock`).
+- [x] Compilação `./gradlew.bat build` validada no Java 25 com empacotamento no JAR verificado.
 
 ---
 

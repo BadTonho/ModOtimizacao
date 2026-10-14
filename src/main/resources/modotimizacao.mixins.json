@@ -14,7 +14,10 @@
     "animations.MixinTextureAtlasSprite",
     "culling.blockentity.MixinBlockEntityRenderDispatcher",
     "culling.blockentity.MixinFrustumAccessor",
-    "culling.entity.MixinEntityRenderDispatcher"
+    "culling.entity.MixinEntityRenderDispatcher",
+    "gui.MixinStringSplitter",
+    "particles.MixinParticleEngine",
+    "particles.MixinQuadParticleGroup"
   ],
   "injectors": {
     "defaultRequire": 1

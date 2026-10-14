@@ -14,6 +14,8 @@ public final class ModConfig {
     public boolean entityOcclusionCulling = true;
     public boolean optimizeFontAndHud = true;
     public boolean optimizeParticles = true;
+    public double particleMaxDistance = 48.0;
+    public int maxParticlesPerBlock = 35;
 
     private static final ModConfig INSTANCE = new ModConfig();
 
