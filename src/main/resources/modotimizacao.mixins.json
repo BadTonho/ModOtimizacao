@@ -15,7 +15,9 @@
     "culling.blockentity.MixinBlockEntityRenderDispatcher",
     "culling.blockentity.MixinFrustumAccessor",
     "culling.entity.MixinEntityRenderDispatcher",
+    "gui.MixinDebugScreenOverlay",
     "gui.MixinStringSplitter",
+    "gui.MixinVideoSettingsScreen",
     "particles.MixinParticleEngine",
     "particles.MixinQuadParticleGroup"
   ],

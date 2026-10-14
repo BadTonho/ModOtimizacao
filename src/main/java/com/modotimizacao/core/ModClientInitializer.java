@@ -15,5 +15,6 @@ public final class ModClientInitializer implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         LOGGER.info("[ModOtimizacao] Inicializando mod de otimização client-side para Minecraft 26.3...");
+        com.modotimizacao.config.ConfigManager.load();
     }
 }

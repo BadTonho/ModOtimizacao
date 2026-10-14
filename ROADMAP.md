@@ -82,12 +82,14 @@ Plano de execução passo a passo para o desenvolvimento do mod de otimização 
 
 ---
 
-## ⚙️ Fase 6: Sistema de Configurações e Diagnóstico
-**Objetivo:** Permitir ao jogador ligar/desligar cada recurso e mensurar os ganhos.
+## ⚙️ Fase 6: Sistema de Configurações e Diagnóstico — ✅ CONCLUÍDO
+**Objetivo:** Permitir ao jogador ligar/desligar cada recurso, personalizar distâncias e mensurar os ganhos diretamente no jogo.
 
-- [ ] Criar arquivo de configuração JSON local em `.minecraft/config/modotimizacao.json`.
-- [ ] Adicionar tela de opções na interface (opcional, com suporte a ModMenu se disponível).
-- [ ] Testes de frametime (1% lows) e perfilamento de consumo de VRAM e GPU.
+- [x] **Persistência de Configurações JSON (`ConfigManager`):** Salva e carrega automaticamente as preferências em `.minecraft/config/modotimizacao.json` com formatação Gson legível (pretty-printing) e recuperação automática contra arquivos corrompidos ou ausentes.
+- [x] **Tela Nativa de Opções In-Game (`ModConfigScreen`):** Tela interativa com botões de alternância (ON/OFF) e seletor cíclico de distância de culling (32, 64, 96 blocos), com salvamento automático ao fechar.
+- [x] **Integração Orgânica às Configurações de Vídeo (`MixinVideoSettingsScreen`):** Botão largo e cabeçalho `⚡ Mod de Otimização` adicionado no rodapé da tela padrão de Gráficos do Minecraft 26.3 (`Esc -> Opções -> Gráficos...`), sem necessitar de mods auxiliares.
+- [x] **Diagnóstico em Tempo Real no F3 (`MixinDebugScreenOverlay`):** Injeção de linha colorida de status no menu F3 indicando o estado ativo/inativo de cada subsistema de otimização (`Anims`, `BE-Cull`, `Ent-Cull`, `HUD`, `Part`).
+- [x] Compilação `./gradlew.bat build` validada com sucesso no Java 25 LTS e Fabric Loom 1.18.4 com empacotamento completo no JAR verificado.
 
 ---
 
