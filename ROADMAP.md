@@ -45,13 +45,16 @@ Plano de execução passo a passo para o desenvolvimento do mod de otimização 
 
 ---
 
-## 📦 Fase 3: Culling de BlockEntities (Baús, Molduras e Placas)
-**Objetivo:** Eliminar quedas de FPS em vilas e salas de baús.
+## 📦 Fase 3: Culling de BlockEntities (Baús, Molduras e Placas) — ✅ CONCLUÍDO
+**Objetivo:** Eliminar quedas de FPS em vilas e salas de baús descartando blocos fora de visão ou ocluídos por paredes.
 
-- [ ] Criar sub-módulo isolado em `modules/culling/blockentity/`.
-- [ ] Implementar teste rápido de oclusão/frustum para caixas de colisão de blocos especiais.
-- [ ] Interceptar o `BlockEntityRenderDispatcher` com injeção de Mixin condicional.
-- [ ] Criar chave de configuração individual (ativar/desativar).
+- [x] Criado sub-módulo modular e desacoplado em `modules/culling/blockentity/` (`BlockEntityCuller`, `BlockEntityCullCache`, `BlockEntityCullingModule`, `ExemptBlockEntities`).
+- [x] Implementado teste de Frustum Culling com coordenadas primitivas double e zero alocações via `MixinFrustumAccessor`.
+- [x] Implementado teste duplo de oclusão: enclausuramento por 6 faces sólidas e raycast visual com cache de alta performance (`Long2BooleanOpenHashMap`) auto-expirável a cada 500ms.
+- [x] Garantida paridade vanilla absoluta (Regra 4): isenção para Beacons, Portais do End, Gateways, blocos sendo quebrados (`breakProgress != null`), proximidade imediata e modo espectador.
+- [x] Interceptado `BlockEntityRenderDispatcher.submit(...)` via `MixinBlockEntityRenderDispatcher` abortando o pipeline da GPU quando ocluído.
+- [x] Opções integradas em `ModConfig` (`enableBlockEntityCulling`, `blockEntityMaxDistance`, `blockEntityOcclusionCulling`).
+- [x] Compilação `./gradlew.bat build` validada no Java 25 com empacotamento no JAR verificado.
 
 ---
 

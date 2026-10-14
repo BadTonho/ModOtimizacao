@@ -7,6 +7,8 @@ package com.modotimizacao.config;
 public final class ModConfig {
     public boolean pauseHiddenAnimations = true;
     public boolean enableBlockEntityCulling = true;
+    public double blockEntityMaxDistance = 64.0;
+    public boolean blockEntityOcclusionCulling = true;
     public boolean enableEntityCulling = true;
     public boolean optimizeFontAndHud = true;
     public boolean optimizeParticles = true;

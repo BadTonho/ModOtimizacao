@@ -18,5 +18,12 @@ public final class BlockEntityCullingModule {
 
     public static void setEnabled(boolean value) {
         enabled = value;
+        if (!value) {
+            BlockEntityCullCache.clear();
+        }
+    }
+
+    public static void clearCache() {
+        BlockEntityCullCache.clear();
     }
 }

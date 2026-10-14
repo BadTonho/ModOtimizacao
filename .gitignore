@@ -2,6 +2,7 @@
 .gradle/
 build/
 out/
+bin/
 
 # Minecraft Run & Logs
 run/
