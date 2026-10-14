@@ -4,6 +4,14 @@
   "package": "com.modotimizacao.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "animations.MixinCompiledSectionMesh",
+    "animations.MixinFluidRenderer",
+    "animations.MixinLevelRenderer",
+    "animations.MixinModelBlockRenderer",
+    "animations.MixinSectionCompiler",
+    "animations.MixinSpriteContents",
+    "animations.MixinSpriteContentsAnimationState",
+    "animations.MixinTextureAtlasSprite"
   ],
   "injectors": {
     "defaultRequire": 1

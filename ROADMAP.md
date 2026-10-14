@@ -33,13 +33,15 @@ Plano de execução passo a passo para o desenvolvimento do mod de otimização 
 
 ---
 
-## ⚡ Fase 2: Primeiro Módulo — Pausa de Animações Invisíveis
+## ⚡ Fase 2: Primeiro Módulo — Pausa de Animações Invisíveis — ✅ CONCLUÍDO
 **Objetivo:** Reduzir consumo de banda da GPU pausando o upload de texturas animadas fora de visão.
 
-- [ ] Identificar o ponto de atualização de animação de sprites no Minecraft (`SpriteContents.Animator` / renderizador de texturas).
-- [ ] Criar mixin cirúrgico para verificar se a textura está sendo desenhada no frame atual antes de avançar o tick da animação.
-- [ ] Garantir 100% de paridade visual (assim que a textura entra na tela, ela roda fluidamente sem delay).
-- [ ] Validar conformidade com a Regra 4 (Fidelidade Vanilla) e Regra 5 (Zero impacto no mundo).
+- [x] Identificado o pipeline de animações no Minecraft 26.3 (`SpriteContents$AnimationState.needsToDraw()`, `drawToAtlas()` e RenderPearl).
+- [x] Implementado o rastreamento duplo de visibilidade (`AnimationTracker` + `SectionAnimationContext`).
+- [x] Mixins cirúrgicos criados para chunks (`CompiledSectionMesh`, `SectionCompiler`, `ModelBlockRenderer`, `FluidRenderer`, `LevelRenderer`) e entidades/GUI (`TextureAtlasSprite`).
+- [x] Garantida 100% de paridade temporal vanilla (avanço de ticks contínuo, sem congelamento ao reentrar na visão).
+- [x] Validada conformidade com a Regra 4 (Fidelidade Vanilla) e Regra 5 (Zero impacto no mundo e estritamente client-side).
+- [x] Compilação `./gradlew build` executada com sucesso e empacotamento verificado.
 
 ---
 
