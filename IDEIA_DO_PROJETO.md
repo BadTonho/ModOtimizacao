@@ -49,6 +49,8 @@ O desenvolvimento segue estritamente as regras definidas em [REGRAS_DO_PROJETO.m
 1. **Segurança e Sigilo:** Jamais subir informações sensíveis ou credenciais para o GitHub.
 2. **Documentação Viva:** Manter sempre a documentação atualizada a cada passo.
 3. **Modularidade e Organização (Zero Monólitos):** Arquitetura distribuída em classes, arquivos e pastas/subpastas dedicadas com responsabilidades bem definidas.
+4. **Fidelidade Vanilla Absoluta:** Jamais remover funções, mecânicas ou recursos visuais do jogo; a otimização deve ser 100% transparente.
+5. **Estritamente Client-Side:** O mod nunca altera blocos, chunks, itens, rede ou o estado do mundo. Totalmente seguro contra corrupção de mundos ou dessincronização em servidores.
 
 ---
 
@@ -56,4 +58,4 @@ O desenvolvimento segue estritamente as regras definidas em [REGRAS_DO_PROJETO.m
 * **[Início]**: Definição do uso do Fabric como loader principal.
 * **[Versão]**: Registro da versão alvo **Minecraft 26.3**.
 * **[Escopo]**: Foco confirmado em **Client-Side** (FPS, fluidez visual e renderização). Nome do mod a ser decidido futuramente.
-* **[Governança]**: Estabelecimento das 3 regras fundamentais e criação do `.gitignore`.
+* **[Governança]**: Estabelecimento das 5 regras fundamentais (Segurança, Documentação Viva, Modularidade, Preservação Vanilla e Client-Side Estrito sem alteração de mundo).

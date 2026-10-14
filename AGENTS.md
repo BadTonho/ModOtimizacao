@@ -13,3 +13,11 @@ Sempre siga estritamente as regras definidas pelo projeto:
    - Não crie arquivos gigantescos ou monólitos.
    - Não hesite em criar arquivos, módulos e classes dedicadas para cada responsabilidade específica.
    - Não hesite em criar pastas e subpastas para organizar melhor a hierarquia do projeto.
+
+4. **Fidelidade Vanilla Absoluta (Nunca Remover Funções):**
+   - NUNCA remova, desative ou quebre nenhuma mecânica, efeito ou função nativa do Minecraft.
+   - Otimizar significa fazer a mesma coisa de forma mais inteligente e eficiente, preservando 100% da experiência vanilla.
+
+5. **Estritamente Client-Side (Zero Alterações no Mundo):**
+   - NUNCA injete código que altere o estado do mundo, lógica de servidor, salvamento em disco ou pacotes de sincronização.
+   - O mod roda exclusivamente no cliente (environment: `client`), garantindo que o mundo e servidores multiplayer permaneçam 100% intocados e seguros contra qualquer corrupção ou dessincronização.
