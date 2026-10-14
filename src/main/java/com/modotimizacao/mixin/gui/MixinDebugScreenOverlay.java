@@ -31,11 +31,9 @@ public abstract class MixinDebugScreenOverlay {
         if (left && lines != null) {
             ModConfig config = ModConfig.getInstance();
             lines.add("");
-            lines.add(String.format("§a[ModOtimizacao 26.3]§r Anims: %s | BE-Cull: %s | Ent-Cull: %s | HUD: %s | Part: %s",
-                    config.pauseHiddenAnimations ? "§aON§r" : "§cOFF§r",
-                    config.enableBlockEntityCulling ? (config.blockEntityOcclusionCulling ? "§aON+Occl§r" : "§eON§r") : "§cOFF§r",
-                    config.enableEntityCulling ? (config.entityOcclusionCulling ? "§aON+Occl§r" : "§eON§r") : "§cOFF§r",
-                    config.optimizeFontAndHud ? "§aON§r" : "§cOFF§r",
+            lines.add(String.format("§a[ModOtimizacao 26.3]§r BE-Cull: %s | Ent-Cull: %s | Part-Limit: %s",
+                    config.enableBlockEntityCulling ? "§aON§r" : "§cOFF§r",
+                    config.enableEntityCulling ? "§aON§r" : "§cOFF§r",
                     config.optimizeParticles ? "§aON§r" : "§cOFF§r"
             ));
         }

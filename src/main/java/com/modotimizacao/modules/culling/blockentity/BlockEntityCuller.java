@@ -109,43 +109,14 @@ public final class BlockEntityCuller {
             return false; // Modo espectador vê através das paredes
         }
 
-        // Teste de Enclausuramento (todas as 6 faces adjacentes são sólidas opacas)
-        boolean fullyEnclosed = true;
+        // Teste de Enclausuramento Rápido (O(1), zero raycasts):
+        // Se as 6 faces adjacentes são sólidas e opacas, o bloco é 100% invisível.
         for (Direction dir : Direction.values()) {
             BlockState neighbor = level.getBlockState(pos.relative(dir));
             if (!neighbor.isSolidRender()) {
-                fullyEnclosed = false;
-                break;
+                return false;
             }
         }
-        if (fullyEnclosed) {
-            return true;
-        }
-
-        // 5. Teste de Linha de Visão (Raycast com Cache)
-        long posKey = pos.asLong();
-        BlockEntityCullCache.checkExpiration();
-        if (BlockEntityCullCache.has(posKey)) {
-            return BlockEntityCullCache.get(posKey);
-        }
-
-        Vec3 blockCenter = Vec3.atCenterOf(pos);
-        ClipContext ctx = new ClipContext(
-                cameraPos,
-                blockCenter,
-                ClipContext.Block.VISUAL,
-                ClipContext.Fluid.NONE,
-                CollisionContext.empty()
-        );
-
-        BlockHitResult hit = level.clip(ctx);
-        boolean occluded = false;
-        if (hit.getType() == HitResult.Type.BLOCK && !hit.getBlockPos().equals(pos)) {
-            BlockState hitState = level.getBlockState(hit.getBlockPos());
-            occluded = hitState.canOcclude() || hitState.isSolidRender();
-        }
-
-        BlockEntityCullCache.put(posKey, occluded);
-        return occluded;
+        return true; // Enclausurado por paredes sólidas
     }
 }

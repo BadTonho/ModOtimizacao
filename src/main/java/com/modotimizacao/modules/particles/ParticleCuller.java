@@ -68,48 +68,12 @@ public final class ParticleCuller {
             return true;
         }
 
-        // 2. Consulta ao Cache por Coordenada de Bloco
+        // 2. Teste se está dentro de um bloco sólido opaco (O(1), zero raycasts)
         int bx = Mth.floor(x);
         int by = Mth.floor(y);
         int bz = Mth.floor(z);
-        long blockKey = BlockPos.asLong(bx, by, bz);
-
-        ParticleCullCache.checkExpiration();
-        if (ParticleCullCache.has(blockKey)) {
-            return ParticleCullCache.get(blockKey);
-        }
-
-        // 3. Teste se está dentro de um bloco sólido opaco
         BlockPos pos = new BlockPos(bx, by, bz);
         BlockState state = level.getBlockState(pos);
-        if (state.isSolidRender()) {
-            ParticleCullCache.put(blockKey, true);
-            return true;
-        }
-
-        // 4. Orçamento de Raycasts por Frame (Fail-safe de desempenho)
-        if (!ParticleCullCache.canRaycast()) {
-            return false; // Se o limite do frame foi atingido, renderiza sem travar
-        }
-
-        ParticleCullCache.incrementRaycasts();
-        Vec3 blockCenter = Vec3.atCenterOf(pos);
-        ClipContext ctx = new ClipContext(
-                camPos,
-                blockCenter,
-                ClipContext.Block.VISUAL,
-                ClipContext.Fluid.NONE,
-                CollisionContext.empty()
-        );
-
-        BlockHitResult hit = level.clip(ctx);
-        boolean occluded = false;
-        if (hit.getType() == HitResult.Type.BLOCK && !hit.getBlockPos().equals(pos)) {
-            BlockState hitState = level.getBlockState(hit.getBlockPos());
-            occluded = hitState.canOcclude() || hitState.isSolidRender();
-        }
-
-        ParticleCullCache.put(blockKey, occluded);
-        return occluded;
+        return state.isSolidRender(); // Descarta partículas presas no interior de rochas/blocos sólidos
     }
 }
