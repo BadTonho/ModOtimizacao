@@ -54,8 +54,14 @@ O desenvolvimento segue estritamente as regras definidas em [REGRAS_DO_PROJETO.m
 
 ---
 
-## 📝 5. Histórico de Decisões & Ideias
+## 🗺️ 5. Plano de Execução
+O detalhamento passo a passo de cada fase de implementação, critérios de aceite e ordem de desenvolvimento está documentado em [ROADMAP.md](file:///c:/Users/Admin/Desktop/ProjetosCode/minecraft/ModOtimização/ROADMAP.md).
+
+---
+
+## 📝 6. Histórico de Decisões & Ideias
 * **[Início]**: Definição do uso do Fabric como loader principal.
 * **[Versão]**: Registro da versão alvo **Minecraft 26.3**.
 * **[Escopo]**: Foco confirmado em **Client-Side** (FPS, fluidez visual e renderização). Nome do mod a ser decidido futuramente.
 * **[Governança]**: Estabelecimento das 5 regras fundamentais (Segurança, Documentação Viva, Modularidade, Preservação Vanilla e Client-Side Estrito sem alteração de mundo).
+* **[Planejamento]**: Criação do [ROADMAP.md](file:///c:/Users/Admin/Desktop/ProjetosCode/minecraft/ModOtimização/ROADMAP.md) estruturando as 6 fases de implementação.
