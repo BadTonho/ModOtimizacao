@@ -10,6 +10,8 @@ public final class ModConfig {
     public double blockEntityMaxDistance = 64.0;
     public boolean blockEntityOcclusionCulling = true;
     public boolean enableEntityCulling = true;
+    public double entityMaxDistance = 64.0;
+    public boolean entityOcclusionCulling = true;
     public boolean optimizeFontAndHud = true;
     public boolean optimizeParticles = true;
 

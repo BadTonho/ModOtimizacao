@@ -58,12 +58,16 @@ Plano de execução passo a passo para o desenvolvimento do mod de otimização 
 
 ---
 
-## 👥 Fase 4: Occlusion Culling de Entidades (Mobs e Jogadores)
-**Objetivo:** Evitar o processamento e envio à GPU de modelos de mobs escondidos atrás de blocos sólidos.
+## 👥 Fase 4: Occlusion Culling de Entidades (Mobs e Jogadores) — ✅ CONCLUÍDO
+**Objetivo:** Evitar o processamento na CPU de esqueletos/animações e envio à GPU de modelos de mobs escondidos atrás de blocos sólidos.
 
-- [ ] Criar sub-módulo isolado em `modules/culling/entity/`.
-- [ ] Interceptar `EntityRenderDispatcher` para pular entidades ocluídas.
-- [ ] Blindagem: garantir que efeitos essenciais (como brilho de contorno/glowing) continuem respeitando o vanilla.
+- [x] Criado sub-módulo modular e desacoplado em `modules/culling/entity/` (`EntityCuller`, `EntityCullCache`, `EntityCullingModule`, `ExemptEntities`).
+- [x] Interceptação cirúrgica pós-frustum em `EntityRenderDispatcher.shouldRender(...)` via `MixinEntityRenderDispatcher` (`@At("RETURN")`), descartando a entidade antes de `LevelExtractor.extractEntity(...)`.
+- [x] Implementado teste de linha de visão de 3 pontos (olhos/cabeça, centro do tronco e pés) via raycast visual (`ClipContext.Block.VISUAL`) com tolerância geométrica.
+- [x] Cache rápido autolimpante (`EntityCullCache`) indexado por `entity.getId()` com ciclo de 100ms (10Hz) para resposta instantânea ao movimento.
+- [x] Blindagem e paridade vanilla absoluta (Regra 4): isenções completas para efeito Glowing / Spectral Arrow, jogador local, câmera, veículos/montarias compartilhadas, bosses (Dragon, Wither, Elder Guardian), laços e modo espectador.
+- [x] Integração completa no `ModConfig` (`enableEntityCulling`, `entityMaxDistance`, `entityOcclusionCulling`).
+- [x] Compilação `./gradlew.bat build` validada no Java 25 com empacotamento no JAR verificado.
 
 ---
 

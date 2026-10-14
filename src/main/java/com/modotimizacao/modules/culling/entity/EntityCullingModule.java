@@ -18,5 +18,12 @@ public final class EntityCullingModule {
 
     public static void setEnabled(boolean value) {
         enabled = value;
+        if (!value) {
+            EntityCullCache.clear();
+        }
+    }
+
+    public static void clearCache() {
+        EntityCullCache.clear();
     }
 }
