@@ -1,0 +1,34 @@
+# Gradle e Build
+.gradle/
+build/
+out/
+
+# Minecraft Run & Logs
+run/
+logs/
+crash-reports/
+
+# IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+
+# SO & Arquivos Temporários
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+
+# Informações sensíveis e credenciais
+*.env
+*.env.*
+secrets.*
+credentials.*
+tokens.*
+*.pem
+*.key
