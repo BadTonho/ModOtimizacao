@@ -1,6 +1,5 @@
 plugins {
     id 'fabric-loom' version '1.18.4'
-    id 'maven-publish'
 }
 
 version = project.mod_version
@@ -33,15 +32,22 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 }
 
+// Valores capturados em tempo de CONFIGURACAO: closures de copy-spec
+// (filesMatching/expand) rodam em tempo de EXECUCAO e nao podem referenciar
+// `project` (requisito do configuration cache, ativo no gradle.properties).
+def modVersion = project.version
+def modMcVersion = project.minecraft_version
+def modLoaderVersion = project.loader_version
+
 processResources {
-    inputs.property "version", project.version
-    inputs.property "minecraft_version", project.minecraft_version
-    inputs.property "loader_version", project.loader_version
+    inputs.property "version", modVersion
+    inputs.property "minecraft_version", modMcVersion
+    inputs.property "loader_version", modLoaderVersion
 
     filesMatching("fabric.mod.json") {
-        expand "version": project.version,
-               "minecraft_version": project.minecraft_version,
-               "loader_version": project.loader_version
+        expand "version": modVersion,
+               "minecraft_version": modMcVersion,
+               "loader_version": modLoaderVersion
     }
 }
 
@@ -63,8 +69,12 @@ tasks.named('remapSourcesJar').configure {
 jar {
     exclude "com/modotimizacao/benchmark/**"
     exclude "fpsrecorder*"
+    // Valor capturado em tempo de CONFIGURACAO: closures de copy-spec (rename)
+    // rodam em tempo de EXECUCAO e nao podem referenciar `project`
+    // (requisito do configuration cache, ativo no gradle.properties).
+    def licenseTargetName = "LICENSE_${project.archives_base_name}"
     from("LICENSE") {
-        rename { "${it}_${project.archives_base_name}" }
+        rename { licenseTargetName }
     }
 }
 
