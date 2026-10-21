@@ -15,6 +15,15 @@ import net.minecraft.world.phys.Vec3;
  */
 public final class ParticleCuller {
 
+    /**
+     * Posição mutável reutilizada para consultas de bloco (Fase 8 — evita
+     * {@code new BlockPos} por partícula por frame). Confinação de thread:
+     * {@code isOccluded} roda exclusivamente na thread de render/main
+     * (extração de grupos de partículas), sem reentrância — nenhum outro
+     * código consulta este cursor.
+     */
+    private static final BlockPos.MutableBlockPos POS = new BlockPos.MutableBlockPos();
+
     private ParticleCuller() {
     }
 
@@ -76,7 +85,7 @@ public final class ParticleCuller {
             return (packed & 1L) != 0L; // entradas do front são sempre do frame atual
         }
 
-        BlockState state = level.getBlockState(new BlockPos(bx, by, bz));
+        BlockState state = level.getBlockState(POS.set(bx, by, bz));
         boolean occluded = state.isSolidRender(); // Bloco sólido: remove partículas em rocha
         ParticleCullCache.store(key, occluded);
         return occluded;

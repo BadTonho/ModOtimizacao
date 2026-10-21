@@ -12,7 +12,6 @@ import net.minecraft.client.particle.TotemParticle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 
 /**
  * Limitador adaptativo de densidade de partículas (Fase 5).
@@ -103,10 +102,14 @@ public final class ParticleLimiter {
             return false;
         }
 
-        Vec3 center = box.getCenter();
-        int bx = Mth.floor(center.x);
-        int by = Mth.floor(center.y);
-        int bz = Mth.floor(center.z);
+        // Centro da AABB calculado manualmente: box.getCenter() aloca um Vec3 por
+        // partícula avaliada (Fase 8 — zero alocação no hot path de spawn)
+        double cx = (box.minX + box.maxX) * 0.5;
+        double cy = (box.minY + box.maxY) * 0.5;
+        double cz = (box.minZ + box.maxZ) * 0.5;
+        int bx = Mth.floor(cx);
+        int by = Mth.floor(cy);
+        int bz = Mth.floor(cz);
         long blockKey = BlockPos.asLong(bx, by, bz);
 
         int currentCount = PARTICLES_PER_BLOCK.get(blockKey);

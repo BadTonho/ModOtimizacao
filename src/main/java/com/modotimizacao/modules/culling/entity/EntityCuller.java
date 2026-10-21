@@ -26,6 +26,14 @@ public final class EntityCuller {
     /** Autoridade máxima da coluna escaneada (fail-safe para estruturas muito altas). */
     private static final int MAX_COLUMN_SCAN = 16;
 
+    /**
+     * Cursor de posição reutilizado para o scan de coluna (Fase 8 — evita
+     * {@code new MutableBlockPos} por entidade por frame). Confinação de thread:
+     * {@code shouldCull} roda exclusivamente na thread de render/main
+     * (EntityRenderDispatcher.shouldRender), sem reentrância durante o scan.
+     */
+    private static final BlockPos.MutableBlockPos CURSOR = new BlockPos.MutableBlockPos();
+
     private EntityCuller() {
     }
 
@@ -93,7 +101,7 @@ public final class EntityCuller {
         // chunk UMA vez (16x menos resoluções de chunk por mob subterrâneo) e
         // itera as seções direto no chunk, comportamento idêntico ao level.getBlockState.
         LevelChunk chunk = level.getChunk(root.getX() >> 4, root.getZ() >> 4);
-        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos(root.getX(), startY, root.getZ());
+        BlockPos.MutableBlockPos cursor = CURSOR.set(root.getX(), startY, root.getZ());
         for (int y = startY; y <= endY; y++) {
             cursor.setY(y);
             BlockState ceiling = chunk.getBlockState(cursor);

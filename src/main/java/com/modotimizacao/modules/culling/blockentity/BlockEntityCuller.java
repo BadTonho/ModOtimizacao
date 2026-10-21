@@ -25,6 +25,15 @@ public final class BlockEntityCuller {
     /** Direções reutilizáveis (Direction.values() clona o array a cada chamada). */
     private static final Direction[] DIRECTIONS = Direction.values();
 
+    /**
+     * Posição mutável reutilizada para as consultas de vizinhos das faces e do
+     * anel ±1 (Fase 8 — evita {@code pos.relative}/pos.offset}, que alocavam de
+     * 6 a 32 objetos por BlockEntity por frame). Confinação de thread:
+     * {@code shouldCull} roda exclusivamente na thread de render/main
+     * (submissão de BlockEntities), sem reentrância durante os testes.
+     */
+    private static final BlockPos.MutableBlockPos NEIGHBOR = new BlockPos.MutableBlockPos();
+
     private BlockEntityCuller() {
     }
 
@@ -112,7 +121,10 @@ public final class BlockEntityCuller {
         // 2) a superfície externa da caixa expandida ±1 (anel de 26 células) também,
         //    protegendo modelos que se projetam no bloco vizinho (camas, baús duplos, mods).
         for (Direction dir : DIRECTIONS) {
-            BlockState neighbor = level.getBlockState(pos.relative(dir));
+            BlockState neighbor = level.getBlockState(NEIGHBOR.set(
+                    pos.getX() + dir.getStepX(),
+                    pos.getY() + dir.getStepY(),
+                    pos.getZ() + dir.getStepZ()));
             if (!neighbor.isSolidRender()) {
                 return false;
             }
@@ -123,7 +135,8 @@ public final class BlockEntityCuller {
                     if (rx == 0 && ry == 0 && rz == 0) {
                         continue;
                     }
-                    BlockState ringNeighbor = level.getBlockState(pos.offset(rx, ry, rz));
+                    BlockState ringNeighbor = level.getBlockState(NEIGHBOR.set(
+                            pos.getX() + rx, pos.getY() + ry, pos.getZ() + rz));
                     if (!ringNeighbor.isSolidRender()) {
                         return false;
                     }
