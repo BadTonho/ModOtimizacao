@@ -7,7 +7,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Leashable;
-import net.minecraft.world.phys.Vec3;
 
 import java.util.Set;
 
@@ -15,25 +14,41 @@ import java.util.Set;
  * Gerencia a lista de exceções de fidelidade vanilla (Regra 4) para entidades.
  * Garante que jogadores, mobs brilhantes (glowing), montarias compartilhadas,
  * bosses e mobs em laços nunca sejam ocultados indevidamente.
+ *
+ * <p>Os bosses são resolvidos uma única vez (lazy, após o freeze dos registros)
+ * como objetos {@link EntityType}: lookup O(1) por identidade de registro,
+ * sem string contains por frame.</p>
  */
 public final class ExemptEntities {
-    private static final Set<String> EXEMPT_BOSS_PATHS = Set.of(
-            "ender_dragon",
-            "wither",
-            "elder_guardian"
-    );
+    private static volatile Set<EntityType<?>> exemptBossTypes;
 
     private ExemptEntities() {
     }
 
+    private static Set<EntityType<?>> exemptBossTypes() {
+        Set<EntityType<?>> local = exemptBossTypes;
+        if (local == null) {
+            local = Set.of(
+                    entityTypeFor("ender_dragon"),
+                    entityTypeFor("wither"),
+                    entityTypeFor("elder_guardian")
+            );
+            exemptBossTypes = local;
+        }
+        return local;
+    }
+
+    private static EntityType<?> entityTypeFor(String path) {
+        return BuiltInRegistries.ENTITY_TYPE.getValue(Identifier.withDefaultNamespace(path));
+    }
+
     /**
-     * Verifica se uma entidade está isenta de culling.
+     * Verifica se uma entidade está isenta de culling (deve renderizar sempre).
      *
-     * @param entity    Entidade a ser testada
-     * @param cameraPos Posição atual da câmera no mundo
-     * @return true se a entidade for isenta (deve renderizar), false caso possa ser testada por oclusão
+     * @param entity Entidade a ser testada
+     * @return true se a entidade for isenta, false caso possa ser testada por distância/oclusão
      */
-    public static boolean isExempt(Entity entity, Vec3 cameraPos) {
+    public static boolean isExempt(Entity entity) {
         if (entity == null) {
             return false;
         }
@@ -72,22 +87,6 @@ public final class ExemptEntities {
         }
 
         // 6. Chefões de grandes proporções (Dragon, Wither, Elder Guardian)
-        EntityType<?> type = entity.getType();
-        if (type != null) {
-            Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-            if (id != null && EXEMPT_BOSS_PATHS.contains(id.getPath())) {
-                return true;
-            }
-        }
-
-        // 7. Proximidade imediata (< 2.5 blocos): evita cortes visuais ao virar esquinas ou cruzar portas
-        if (cameraPos != null) {
-            double distSq = entity.position().distanceToSqr(cameraPos);
-            if (distSq <= 6.25) {
-                return true;
-            }
-        }
-
-        return false;
+        return exemptBossTypes().contains(entity.getType());
     }
 }

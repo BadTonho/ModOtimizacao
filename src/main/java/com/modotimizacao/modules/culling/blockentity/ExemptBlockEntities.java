@@ -10,16 +10,33 @@ import java.util.Set;
 /**
  * Gerencia a lista de BlockEntities isentas de culling para preservar a fidelidade vanilla (Regra 4).
  * Beacons, portais do End e blocos sendo ativamente minerados/quebrados nunca são ocluídos.
+ *
+ * <p>Os tipos são resolvidos uma única vez (lazy, após o freeze dos registros)
+ * como objetos {@link BlockEntityType}: lookup O(1) por identidade de registro,
+ * sem string contains por frame.</p>
  */
 public final class ExemptBlockEntities {
-    private static final Set<String> EXEMPT_PATHS = Set.of(
-            "beacon",
-            "end_gateway",
-            "end_portal",
-            "structure_block"
-    );
+    private static volatile Set<BlockEntityType<?>> exemptTypes;
 
     private ExemptBlockEntities() {
+    }
+
+    private static Set<BlockEntityType<?>> exemptTypes() {
+        Set<BlockEntityType<?>> local = exemptTypes;
+        if (local == null) {
+            local = Set.of(
+                    typeFor("beacon"),
+                    typeFor("end_gateway"),
+                    typeFor("end_portal"),
+                    typeFor("structure_block")
+            );
+            exemptTypes = local;
+        }
+        return local;
+    }
+
+    private static BlockEntityType<?> typeFor(String path) {
+        return BuiltInRegistries.BLOCK_ENTITY_TYPE.getValue(Identifier.withDefaultNamespace(path));
     }
 
     public static boolean isExempt(BlockEntityRenderState state) {
@@ -33,15 +50,6 @@ public final class ExemptBlockEntities {
         }
 
         BlockEntityType<?> type = state.blockEntityType;
-        if (type == null) {
-            return false;
-        }
-
-        Identifier key = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(type);
-        if (key == null) {
-            return false;
-        }
-
-        return EXEMPT_PATHS.contains(key.getPath());
+        return type != null && exemptTypes().contains(type);
     }
 }

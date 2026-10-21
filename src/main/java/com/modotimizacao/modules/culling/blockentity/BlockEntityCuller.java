@@ -9,23 +9,21 @@ import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.CollisionContext;
 
 /**
  * Motor central de cálculo de Culling para BlockEntities.
- * Executa testes em camadas:
+ * Executa testes em camadas (O(1), zero raycasts):
  * 1. Isenções vanilla (Beacons, Portais, Blocos quebrando)
- * 2. Distância máxima configurada
+ * 2. Distância máxima configurada (default Ilimitado = vanilla)
  * 3. Frustum Culling com coordenadas primitivas
- * 4. Oclusão por enclausuramento sólido
- * 5. Raycast de linha de visão com cache de alta performance
+ * 4. Oclusão por enclausuramento sólido com margem protetora (anel ±1)
  */
 public final class BlockEntityCuller {
+
+    /** Direções reutilizáveis (Direction.values() clona o array a cada chamada). */
+    private static final Direction[] DIRECTIONS = Direction.values();
 
     private BlockEntityCuller() {
     }
@@ -110,13 +108,28 @@ public final class BlockEntityCuller {
         }
 
         // Teste de Enclausuramento Rápido (O(1), zero raycasts):
-        // Se as 6 faces adjacentes são sólidas e opacas, o bloco é 100% invisível.
-        for (Direction dir : Direction.values()) {
+        // 1) as 6 faces adjacentes devem ser sólidas e opacas, e
+        // 2) a superfície externa da caixa expandida ±1 (anel de 26 células) também,
+        //    protegendo modelos que se projetam no bloco vizinho (camas, baús duplos, mods).
+        for (Direction dir : DIRECTIONS) {
             BlockState neighbor = level.getBlockState(pos.relative(dir));
             if (!neighbor.isSolidRender()) {
                 return false;
             }
         }
-        return true; // Enclausurado por paredes sólidas
+        for (int rx = -1; rx <= 1; rx++) {
+            for (int ry = -1; ry <= 1; ry++) {
+                for (int rz = -1; rz <= 1; rz++) {
+                    if (rx == 0 && ry == 0 && rz == 0) {
+                        continue;
+                    }
+                    BlockState ringNeighbor = level.getBlockState(pos.offset(rx, ry, rz));
+                    if (!ringNeighbor.isSolidRender()) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true; // Enclausurado por paredes sólidas com margem completa
     }
 }
