@@ -1,57 +1,81 @@
 package com.modotimizacao.modules.gui;
 
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
+import net.minecraft.client.StringSplitter;
+
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 /**
  * Cache de alta performance para medição de largura de textos e fontes (Fase 5).
  * Elimina milhares de decomposições de strings e iterações de glifos por frame no HUD,
  * chat, scoreboard e telas de inventário.
+ *
+ * <p>Correção de fidelidade (Regra 4): a chave primária de invalidação é a própria
+ * instância do {@link StringSplitter}. Como cada recarga de recursos/idioma cria
+ * novas instâncias de Font {@code(FontManager#createFont)}, os caches obsoletos
+ * ficam naturalmente órfãos e são reciclados pelo limite de instâncias — nunca
+ * servindo uma largura medida com uma fonte para outra.</p>
  */
 public final class FontWidthCache {
-    private static final Object2FloatOpenHashMap<String> CACHE = new Object2FloatOpenHashMap<>();
-    private static final int MAX_CACHE_SIZE = 4096;
+    private static final Map<StringSplitter, Object2FloatOpenHashMap<String>> INSTANCES = new IdentityHashMap<>();
+    private static final int MAX_INSTANCES = 8;
+    private static final int MAX_ENTRIES_PER_INSTANCE = 512;
     private static final int MAX_STRING_LENGTH = 256;
-
-    static {
-        CACHE.defaultReturnValue(-1.0f);
-    }
 
     private FontWidthCache() {
     }
 
     /**
-     * Obtém a largura em pixels pré-calculada de uma string, se presente no cache.
+     * Obtém a largura em pixels pré-calculada de uma string, se presente no cache
+     * da instância de splitter (fonte) informada.
      *
-     * @param text Texto a ser consultado
+     * @param splitter Instância do StringSplitter (define a fonte/métricas válidas)
+     * @param text     Texto a ser consultado
      * @return largura em float, ou -1.0f se não estiver em cache
      */
-    public static float get(String text) {
-        if (text == null || text.length() > MAX_STRING_LENGTH) {
+    public static float get(StringSplitter splitter, String text) {
+        if (splitter == null || text == null || text.length() > MAX_STRING_LENGTH) {
             return -1.0f;
         }
-        return CACHE.getFloat(text);
+        Object2FloatOpenHashMap<String> cache = INSTANCES.get(splitter);
+        if (cache == null) {
+            return -1.0f;
+        }
+        return cache.getFloat(text);
     }
 
     /**
-     * Armazena a largura calculada de uma string no cache.
+     * Armazena a largura calculada de uma string no cache da instância de splitter informada.
      *
-     * @param text  Texto medido
-     * @param width Largura calculada pelo renderizador vanilla
+     * @param splitter Instância do StringSplitter (define a fonte/métricas válidas)
+     * @param text     Texto medido
+     * @param width    Largura calculada pelo renderizador vanilla
      */
-    public static void put(String text, float width) {
-        if (text == null || text.length() > MAX_STRING_LENGTH) {
+    public static void put(StringSplitter splitter, String text, float width) {
+        if (splitter == null || text == null || text.length() > MAX_STRING_LENGTH) {
             return;
         }
-        if (CACHE.size() >= MAX_CACHE_SIZE) {
-            CACHE.clear();
+        Object2FloatOpenHashMap<String> cache = INSTANCES.get(splitter);
+        if (cache == null) {
+            if (INSTANCES.size() >= MAX_INSTANCES) {
+                // Teto de segurança de memória: descarta caches de splitters antigos.
+                INSTANCES.clear();
+            }
+            cache = new Object2FloatOpenHashMap<>();
+            cache.defaultReturnValue(-1.0f);
+            INSTANCES.put(splitter, cache);
         }
-        CACHE.put(text, width);
+        if (cache.size() >= MAX_ENTRIES_PER_INSTANCE) {
+            cache.clear();
+        }
+        cache.put(text, width);
     }
 
     /**
-     * Limpa todo o cache (acionado ao trocar idioma, resolução ou recarregar recursos).
+     * Limpa todos os caches (acionado ao recarregar recursos/recursos de fonte).
      */
-    public static void clear() {
-        CACHE.clear();
+    public static void clearAll() {
+        INSTANCES.clear();
     }
 }

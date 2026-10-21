@@ -16,6 +16,7 @@
     "culling.blockentity.MixinFrustumAccessor",
     "culling.entity.MixinEntityRenderDispatcher",
     "gui.MixinDebugScreenOverlay",
+    "gui.MixinFontManager",
     "gui.MixinStringSplitter",
     "gui.MixinVideoSettingsScreen",
     "particles.MixinParticleEngine",

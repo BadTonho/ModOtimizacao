@@ -19,11 +19,11 @@ public final class GuiOptimizationModule {
     public static void setEnabled(boolean value) {
         enabled = value;
         if (!value) {
-            FontWidthCache.clear();
+            FontWidthCache.clearAll();
         }
     }
 
     public static void clearCache() {
-        FontWidthCache.clear();
+        FontWidthCache.clearAll();
     }
 }
