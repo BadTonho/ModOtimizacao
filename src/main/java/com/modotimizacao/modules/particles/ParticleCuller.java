@@ -64,12 +64,21 @@ public final class ParticleCuller {
             return true;
         }
 
-        // 2. Teste se está dentro de um bloco sólido opaco (O(1), zero raycasts)
+        // 2. Teste se está dentro de um bloco sólido opaco — servido por cache real
+        //    por frame (Fase 8): partículas do mesmo bloco no mesmo frame compartilham
+        //    UMA única consulta getBlockState. Zero alocação no caminho de hit.
         int bx = Mth.floor(x);
         int by = Mth.floor(y);
         int bz = Mth.floor(z);
-        BlockPos pos = new BlockPos(bx, by, bz);
-        BlockState state = level.getBlockState(pos);
-        return state.isSolidRender(); // Descarta partículas presas no interior de rochas/blocos sólidos
+        long key = BlockPos.asLong(bx, by, bz);
+        long packed = ParticleCullCache.lookup(key);
+        if (packed != 0L) {
+            return (packed & 1L) != 0L; // entradas do front são sempre do frame atual
+        }
+
+        BlockState state = level.getBlockState(new BlockPos(bx, by, bz));
+        boolean occluded = state.isSolidRender(); // Bloco sólido: remove partículas em rocha
+        ParticleCullCache.store(key, occluded);
+        return occluded;
     }
 }

@@ -6,6 +6,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
 
 /**
  * Motor de culling de entidades ultra-rápido (Zero Raycasts, O(1)).
@@ -88,10 +89,14 @@ public final class EntityCuller {
             return false; // Coluna mais alta que o scan: indecisão = vanilla
         }
 
+        // Fase 8: a coluna vertical nunca cruza chunks (x/z fixos) — resolve o
+        // chunk UMA vez (16x menos resoluções de chunk por mob subterrâneo) e
+        // itera as seções direto no chunk, comportamento idêntico ao level.getBlockState.
+        LevelChunk chunk = level.getChunk(root.getX() >> 4, root.getZ() >> 4);
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos(root.getX(), startY, root.getZ());
         for (int y = startY; y <= endY; y++) {
             cursor.setY(y);
-            BlockState ceiling = level.getBlockState(cursor);
+            BlockState ceiling = chunk.getBlockState(cursor);
             if (!ceiling.isSolidRender()) {
                 return false; // Abertura: entidade pode estar visível, renderiza
             }

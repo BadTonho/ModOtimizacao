@@ -3,6 +3,7 @@ package com.modotimizacao.mixin.animations;
 import com.modotimizacao.modules.animations.AnimatedSpriteHolder;
 import com.modotimizacao.modules.animations.AnimationOptimizer;
 import com.modotimizacao.modules.animations.AnimationTracker;
+import com.modotimizacao.modules.core.FrameTracker;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.chunk.SectionMesh;
@@ -26,8 +27,13 @@ public abstract class MixinLevelRenderer {
 
     @Inject(method = "prepareChunkRenders", at = @At("HEAD"))
     private void modotimizacao$trackVisibleSectionAnimations(Matrix4fc matrix, boolean bool, CallbackInfoReturnable<?> cir) {
+        // Fase 8: sincronização única de frame — alimenta o FrameTracker que
+        // avança os caches por frame (animações + oclusão de partículas),
+        // incondicionalmente (custo amortizado O(1); os módulos se gateiam
+        // nos seus próprios hot paths).
+        FrameTracker.onFrameStart();
+
         if (AnimationOptimizer.isEnabled()) {
-            AnimationTracker.onFrameStart();
             int count = this.visibleSections.size();
             for (int i = 0; i < count; i++) {
                 SectionRenderDispatcher.RenderSection section = this.visibleSections.get(i);
