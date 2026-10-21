@@ -72,9 +72,4 @@ public final class ParticleLimiter {
         PARTICLES_PER_BLOCK.put(blockKey, currentCount + 1);
         return false;
     }
-
-    public static void clear() {
-        PARTICLES_PER_BLOCK.clear();
-        totalThisTick = 0;
-    }
 }
