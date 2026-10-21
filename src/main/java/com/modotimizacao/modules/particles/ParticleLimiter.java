@@ -3,7 +3,12 @@ package com.modotimizacao.modules.particles;
 import com.modotimizacao.config.ModConfig;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.CritParticle;
+import net.minecraft.client.particle.NoteParticle;
 import net.minecraft.client.particle.Particle;
+import net.minecraft.client.particle.TotemParticle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
@@ -13,24 +18,61 @@ import net.minecraft.world.phys.Vec3;
  * Limitador adaptativo de densidade de partículas (Fase 5).
  * Previne quedas bruscas de FPS e travamentos de GPU decorrentes de centenas de partículas
  * acumuladas no mesmo bloco durante explosões massivas de TNT, fogos de artifício ou poções.
+ *
+ * <p>Correções de fidelidade vanilla (Regra 4):
+ * <ul>
+ *   <li>Partículas de feedback crítico nunca são descartadas (crit/dano/enchanted hit,
+ *       nota de música, totem da imortalidade) — o vanilla as exibe e elas são
+ *       essenciais para leitura de combate.</li>
+ *   <li>A janela de densidade é alinhada ao tick do jogo quando dentro de um mundo
+ *       (antes usava relógio pared, derrapando em lag/pausa); fora de mundo usa relógio.</li>
+ * </ul></p>
  */
 public final class ParticleLimiter {
     private static final Long2IntMap PARTICLES_PER_BLOCK = new Long2IntOpenHashMap();
+    private static long lastGameTick = -1L;
     private static long lastResetTime = System.currentTimeMillis();
     private static int totalThisTick = 0;
     private static final int MAX_GLOBAL_PER_TICK = 1000;
-    private static final long TICK_DURATION_MS = 50L;
+    private static final long FALLBACK_WINDOW_MS = 50L;
 
     private ParticleLimiter() {
     }
 
+    /**
+     * Janela de densidade: alinhada ao tick do jogo em mundo; relógio pared nos menus.
+     */
     private static void checkTickReset() {
-        long now = System.currentTimeMillis();
-        if (now - lastResetTime >= TICK_DURATION_MS) {
-            PARTICLES_PER_BLOCK.clear();
-            totalThisTick = 0;
-            lastResetTime = now;
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level != null) {
+            long tick = level.getGameTime();
+            if (tick != lastGameTick) {
+                lastGameTick = tick;
+                resetWindow();
+            }
+        } else {
+            long now = System.currentTimeMillis();
+            if (now - lastResetTime >= FALLBACK_WINDOW_MS) {
+                lastResetTime = now;
+                resetWindow();
+            }
         }
+    }
+
+    private static void resetWindow() {
+        PARTICLES_PER_BLOCK.clear();
+        totalThisTick = 0;
+    }
+
+    /**
+     * Partículas de feedback de combate/ritual: o vanilla as exibe sempre, então
+     * nunca são limitadas (fidelidade vanilla). No 26.3, crit, dano-inimigo e
+     * enchanted-hit são a mesma classe {@link CritParticle}.
+     */
+    private static boolean isFeedbackParticle(Particle particle) {
+        return particle instanceof CritParticle
+                || particle instanceof NoteParticle
+                || particle instanceof TotemParticle;
     }
 
     /**
@@ -41,6 +83,11 @@ public final class ParticleLimiter {
      */
     public static boolean shouldThrottle(Particle particle) {
         if (!ParticleOptimizationModule.isEnabled() || particle == null) {
+            return false;
+        }
+
+        // Isenção de fidelidade: feedback visual de gameplay nunca é cortado
+        if (isFeedbackParticle(particle)) {
             return false;
         }
 
