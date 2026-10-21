@@ -27,8 +27,8 @@ Plano de execução passo a passo para o desenvolvimento do mod de otimização 
 - [x] **Esqueleto de Pastas e Pacotes (Regra 3):**
   - `com.modotimizacao.core`: Classe de inicialização `ModClientInitializer`.
   - `com.modotimizacao.config`: `ModConfig` desacoplado.
-  - `com.modotimizacao.modules`: Subpastas `animations`, `culling/blockentity`, `culling/entity`.
-  - `com.modotimizacao.util`: `FrustumUtil`.
+  - `com.modotimizacao.modules`: Subpastas `animations`, `culling/blockentity`, `culling/entity` (+ `gui` e `particles` nas fases seguintes).
+  - `com.modotimizacao.util`: `FrustumUtil` (removido posteriormente na Fase 7 por código morto).
 - [x] **Compilação e Verificação:** Executado `./gradlew build` com sucesso gerando o JAR final.
 
 ---
@@ -48,12 +48,12 @@ Plano de execução passo a passo para o desenvolvimento do mod de otimização 
 ## 📦 Fase 3: Culling de BlockEntities (Baús, Molduras e Placas) — ✅ CONCLUÍDO
 **Objetivo:** Eliminar quedas de FPS em vilas e salas de baús descartando blocos fora de visão ou ocluídos por paredes.
 
-- [x] Criado sub-módulo modular e desacoplado em `modules/culling/blockentity/` (`BlockEntityCuller`, `BlockEntityCullCache`, `BlockEntityCullingModule`, `ExemptBlockEntities`).
+- [x] Criado sub-módulo modular e desacoplado em `modules/culling/blockentity/` (`BlockEntityCuller`, `BlockEntityCullingModule`, `ExemptBlockEntities`).
 - [x] Implementado teste de Frustum Culling com coordenadas primitivas double e zero alocações via `MixinFrustumAccessor`.
-- [x] Implementado teste duplo de oclusão: enclausuramento por 6 faces sólidas e raycast visual com cache de alta performance (`Long2BooleanOpenHashMap`) auto-expirável a cada 500ms.
+- [x] Implementado teste de oclusão 100% O(1), zero raycasts: enclausuramento pelas 6 faces sólidas **+ anel externo ±1 (26 células)** para proteger camas, baús duplos e modelos multi-bloco.
 - [x] Garantida paridade vanilla absoluta (Regra 4): isenção para Beacons, Portais do End, Gateways, blocos sendo quebrados (`breakProgress != null`), proximidade imediata e modo espectador.
 - [x] Interceptado `BlockEntityRenderDispatcher.submit(...)` via `MixinBlockEntityRenderDispatcher` abortando o pipeline da GPU quando ocluído.
-- [x] Opções integradas em `ModConfig` (`enableBlockEntityCulling`, `blockEntityMaxDistance`, `blockEntityOcclusionCulling`).
+- [x] Opções integradas em `ModConfig` (`enableBlockEntityCulling`, `blockEntityMaxDistance` default **Ilimitado**, `blockEntityOcclusionCulling`).
 - [x] Compilação `./gradlew.bat build` validada no Java 25 com empacotamento no JAR verificado.
 
 ---
@@ -61,12 +61,11 @@ Plano de execução passo a passo para o desenvolvimento do mod de otimização 
 ## 👥 Fase 4: Occlusion Culling de Entidades (Mobs e Jogadores) — ✅ CONCLUÍDO
 **Objetivo:** Evitar o processamento na CPU de esqueletos/animações e envio à GPU de modelos de mobs escondidos atrás de blocos sólidos.
 
-- [x] Criado sub-módulo modular e desacoplado em `modules/culling/entity/` (`EntityCuller`, `EntityCullCache`, `EntityCullingModule`, `ExemptEntities`).
-- [x] Interceptação cirúrgica pós-frustum em `EntityRenderDispatcher.shouldRender(...)` via `MixinEntityRenderDispatcher` (`@At("RETURN")`), descartando a entidade antes de `LevelExtractor.extractEntity(...)`.
-- [x] Implementado teste de linha de visão de 3 pontos (olhos/cabeça, centro do tronco e pés) via raycast visual (`ClipContext.Block.VISUAL`) com tolerância geométrica.
-- [x] Cache rápido autolimpante (`EntityCullCache`) indexado por `entity.getId()` com ciclo de 100ms (10Hz) para resposta instantânea ao movimento.
-- [x] Blindagem e paridade vanilla absoluta (Regra 4): isenções completas para efeito Glowing / Spectral Arrow, jogador local, câmera, veículos/montarias compartilhadas, bosses (Dragon, Wither, Elder Guardian), laços e modo espectador.
-- [x] Integração completa no `ModConfig` (`enableEntityCulling`, `entityMaxDistance`, `entityOcclusionCulling`).
+- [x] Criado sub-módulo modular e desacoplado em `modules/culling/entity/` (`EntityCuller`, `EntityCullingModule`, `ExemptEntities`).
+- [x] Interceptação cirúrgica pós-frustum em `EntityRenderDispatcher.shouldRender(...)` via `MixinEntityRenderDispatcher` (`@At("RETURN")`), descartando a entidade antes da extração para a GPU.
+- [x] Teste de oclusão de cavernas 100% O(coluna), zero raycasts: escaneia a coluna completa de blocos acima da entidade até o nível da câmera (máx. 16 blocos, fail-safe vanilla quando indeciso).
+- [x] Blindagem e paridade vanilla absoluta (Regra 4): isenções completas para efeito Glowing / Spectral Arrow, jogador local, câmera, veículos/montarias compartilhadas, bosses (Ender Dragon, Wither, Elder Guardian), laços e modo espectador.
+- [x] Integração completa no `ModConfig` (`enableEntityCulling`, `entityMaxDistance` default **Ilimitado**, `entityOcclusionCulling`).
 - [x] Compilação `./gradlew.bat build` validada no Java 25 com empacotamento no JAR verificado.
 
 ---
@@ -74,10 +73,10 @@ Plano de execução passo a passo para o desenvolvimento do mod de otimização 
 ## 🎨 Fase 5: Otimização de Interface e Partículas — ✅ CONCLUÍDO
 **Objetivo:** Melhorar a resposta de menus/inventários, aliviar alocações de memória de texto e evitar travamentos com partículas.
 
-- [x] **Cache de Largura de Fontes/HUD:** Implementado `FontWidthCache` e `MixinStringSplitter` para acelerar medições de texto repetidas no HUD, menus e scoreboard, eliminando alocações de `MutableFloat` e decomposições de strings por frame.
-- [x] **Culling de Partículas Ocluídas:** Implementado `ParticleCuller`, `ParticleCullCache` e `MixinQuadParticleGroup` para descartar partículas dentro de blocos sólidos ou atrás de paredes, com orçamento seguro de raycasts por frame (máximo 32 raycasts/frame) e proteção de proximidade (<= 3 blocos sempre visível).
-- [x] **Limitador Adaptativo de Partículas:** Implementado `ParticleLimiter` e `MixinParticleEngine` para descartar excessos em explosões massivas (mais de 35 partículas/bloco por tick), prevenindo travamentos e lag spikes de GPU.
-- [x] Opções integradas em `ModConfig` (`optimizeFontAndHud`, `optimizeParticles`, `particleMaxDistance`, `maxParticlesPerBlock`).
+- [x] **Cache de Largura de Fontes/HUD:** Implementado `FontWidthCache` e `MixinStringSplitter` para acelerar medições de texto repetidas no HUD, menus e scoreboard. Cache por **instância de fonte** (IdentityHashMap) com invalidação no reload de recursos (`MixinFontManager`), eliminando alocações de `MutableFloat` e decomposições de strings por frame.
+- [x] **Culling de Partículas Ocluídas:** Implementado `ParticleCuller` e `MixinQuadParticleGroup` (`@WrapOperation`/MixinExtras) para descartar partículas dentro de blocos sólidos ou fora da distância configurada, 100% O(1) e zero raycasts, com proteção de proximidade (<= 3 blocos sempre visível).
+- [x] **Limitador Adaptativo de Partículas:** Implementado `ParticleLimiter` e `MixinParticleEngine` para descartar excessos em explosões massivas (mais de 35 partículas/bloco por tick), com janela alinhada ao tick do jogo e **isenções de fidelidade** para CritParticle (crit/dano/enchanted-hit), NoteParticle e TotemParticle.
+- [x] Opções integradas em `ModConfig` (`optimizeFontAndHud`, `optimizeParticles`, `particleMaxDistance` default **Ilimitado**, `maxParticlesPerBlock`).
 - [x] Compilação `./gradlew.bat build` validada no Java 25 com empacotamento no JAR verificado.
 
 ---
@@ -86,10 +85,29 @@ Plano de execução passo a passo para o desenvolvimento do mod de otimização 
 **Objetivo:** Permitir ao jogador ligar/desligar cada recurso, personalizar distâncias e mensurar os ganhos diretamente no jogo.
 
 - [x] **Persistência de Configurações JSON (`ConfigManager`):** Salva e carrega automaticamente as preferências em `.minecraft/config/modotimizacao.json` com formatação Gson legível (pretty-printing) e recuperação automática contra arquivos corrompidos ou ausentes.
-- [x] **Tela Nativa de Opções In-Game (`ModConfigScreen`):** Tela interativa com botões de alternância (ON/OFF) e seletor cíclico de distância de culling (32, 64, 96 blocos), com salvamento automático ao fechar.
+- [x] **Tela Nativa de Opções In-Game (`ModConfigScreen`):** Tela interativa com botões de alternância (ON/OFF) e seletor cíclico de distância de culling (**Ilimitado (Vanilla)** → 96 → 64 → 32), com salvamento automático ao fechar.
 - [x] **Integração Orgânica às Configurações de Vídeo (`MixinVideoSettingsScreen`):** Botão largo e cabeçalho `⚡ Mod de Otimização` adicionado no rodapé da tela padrão de Gráficos do Minecraft 26.3 (`Esc -> Opções -> Gráficos...`), sem necessitar de mods auxiliares.
 - [x] **Diagnóstico em Tempo Real no F3 (`MixinDebugScreenOverlay`):** Injeção de linha colorida de status no menu F3 indicando o estado ativo/inativo de cada subsistema de otimização (`Anims`, `BE-Cull`, `Ent-Cull`, `HUD`, `Part`).
 - [x] Compilação `./gradlew.bat build` validada com sucesso no Java 25 LTS e Fabric Loom 1.18.4 com empacotamento completo no JAR verificado.
+
+---
+
+## 🔧 Fase 7: Auditoria Completa e Correções de Integridade — ✅ CONCLUÍDO
+**Objetivo:** Eliminar bugs, falsos positivos e incompatibilidades mapeados por uma auditoria completa (Código, Mixins × JAR real 26.3, scripts de benchmark e documentação).
+
+- [x] **Registro de Mixins:** Os 8 mixins da Fase 2 (animções) e o `gui.MixinStringSplitter` estavam compilados porém **não registrados** em `modotimizacao.mixins.json` (recursos da Fase 2/5 executavam como código morto na prática). Todos registrados; cada alvo validado via `javap` contra o JAR oficial do Minecraft 26.3.
+- [x] **FontWidthCache:** chave por instância de fonte (`StringSplitter`), invalidação via `MixinFontManager` (`FontManager.reload`) e teto de memória (8 instâncias × 512 textos). Antes, larguras cruzavam entre fontes e o cache nunca invalidava.
+- [x] **Fidelidade Vanilla (Regra 4) nos defaults:** distâncias de culling de BlockEntities/entidades/partículas agora iniciam **Ilimitadas** (sentinela 1.0E9); o jogador opta por restringir conscientemente na GUI (ciclo Ilimitado → 96 → 64 → 32).
+- [x] **Falsos positivos corrigidos:** oclusão de cavernas por coluna completa (antes testava 1 único bloco); enclausuramento de BlockEntities com margem de anel ±1 (antes escondia camas/modelos multi-bloco).
+- [x] **Código morto removido:** `EntityCullCache`, `BlockEntityCullCache`, `ParticleCullCache`, `FrustumUtil`, flags/gates duplicados e imports órfãos (javadocs agora descrevem o comportamento real).
+- [x] **MixinExtras:** `@Redirect` substituído por `@WrapOperation` no culling de partículas — composível com outros mods (livre de colisão).
+- [x] **Benchmark íntegro:** teste "Vanilla" desativa também o resíduo compilado (`build/resources/main`); a suíte limpa `run/mods`/mundo no fim; `runVanilla.bat` com auto-reparo; 1% Low corrigido (média dos 1% piores, não 1 amostra); fallback de processo restrito; aborto quando o cliente não entra no mundo.
+- [x] **Granularidade de performance:** zero alocação por entidade/BE/frame (sem `new Vec3`, `Direction[]` estático, `Set` de isenções pré-resolvido, distância calculada 1×).
+- [x] **Manifestação de limites (ferramenta fps-recorder):** satisfaz contexto de benchmark separado do JAR principal; validada a existência de `BackupConfirmScreen.onProceed` no JAR 26.3 via `javap`.
+- [x] **F3 completo:** linha de diagnóstico com `Anims/HUD/BE-Cull/Ent-Cull/Part-Limit` (antes faltava 2/2).
+- [x] **LICENSE MIT** incluída no repositório e no JAR; `gradle.properties` sincronizado (removida a variável yarn_mappings morta; corrigida a propriedade `archives_base_name` no Gradle 9).
+
+**Ferramentas da auditoria:** `gradlew clean build` (Java 25), `javap` contra o JAR oficial `minecraft-merged-26.3-*.jar`, parser de sintaxe PowerShell e revisão linha a linha dos 45 arquivos Java.
 
 ---
 
