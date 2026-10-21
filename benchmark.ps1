@@ -3,6 +3,9 @@ param (
     [string]$WorldName = ""
 )
 
+# Garante que todos os caminhos relativos funcionem independentemente do diretorio de execucao
+Set-Location -Path $PSScriptRoot
+
 Write-Host "================================================================" -ForegroundColor Cyan
 Write-Host "  INICIANDO SUITE DE BENCHMARK AUTOMATIZADO - MINECRAFT 26.3    " -ForegroundColor Cyan
 Write-Host "================================================================" -ForegroundColor Cyan
@@ -16,14 +19,14 @@ if ($WorldName -ne "") {
 } else {
     $worldCandidates = Get-ChildItem -Path $benchmarkWorldDir -Directory -ErrorAction SilentlyContinue | Where-Object {
         Test-Path (Join-Path $_.FullName "level.dat")
-    }
+    } | Sort-Object Name
     if ($worldCandidates) {
         $detectedWorld = $worldCandidates[0].Name
         Write-Host "[Benchmark] Mundo pesado detectado em benchmark/world: '$detectedWorld'" -ForegroundColor Green
     } elseif (Test-Path "run/saves") {
         $runSaves = Get-ChildItem -Path "run/saves" -Directory -ErrorAction SilentlyContinue | Where-Object {
             Test-Path (Join-Path $_.FullName "level.dat") -and $_.Name -ne "benchmark_world"
-        }
+        } | Sort-Object Name
         if ($runSaves) {
             $detectedWorld = $runSaves[0].Name
             Write-Host "[Benchmark] Usando mundo existente em run/saves: '$detectedWorld'" -ForegroundColor Yellow
@@ -50,10 +53,14 @@ if (Test-Path $targetWorldPath) {
 }
 if (Test-Path $sourceWorldPath) {
     Copy-Item -Path $sourceWorldPath -Destination $targetWorldPath -Recurse -Force
+    $effectiveSource = $sourceWorldPath
 } else {
     $fallbackSource = Join-Path "run/saves" $detectedWorld
     if (Test-Path $fallbackSource) {
         Copy-Item -Path $fallbackSource -Destination $targetWorldPath -Recurse -Force
+        $effectiveSource = $fallbackSource
+    } else {
+        $effectiveSource = $sourceWorldPath
     }
 }
 
@@ -100,8 +107,8 @@ function Run-BenchmarkInstance {
         }
 
         # Restaura o estado limpo e consistente do mundo para a instancia
-        if (Test-Path $sourceWorldPath) {
-            Copy-Item -Path $sourceWorldPath -Destination $targetWorldPath -Recurse -Force -ErrorAction SilentlyContinue
+        if (Test-Path $effectiveSource) {
+            Copy-Item -Path $effectiveSource -Destination $targetWorldPath -Recurse -Force -ErrorAction SilentlyContinue
         }
 
         if ($BeforeLaunch) {
@@ -149,10 +156,22 @@ function Run-BenchmarkInstance {
             }
         }
 
+        # Aborta imediatamente se o cliente nunca renderizou no mundo (evita medir menus e gerar dado vazio)
+        if (-not (Test-Path "run/benchmark_fps.csv")) {
+            Write-Error "[Benchmark] O cliente nao entrou no mundo em 65s. Abortando esta instancia para nao coletar dados de menus."
+            if ($javaProc) {
+                Stop-Process -Id $javaProc.Id -Force -ErrorAction SilentlyContinue
+            }
+            if ($proc -and -not $proc.HasExited) {
+                Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+            }
+            return
+        }
+
         if (-not $javaProc) {
-            # Tenta pegar processo java de alto consumo nao relacionado a IDE
+            # Fallback: apenas java.exe com marcadores claros do proprio jogo (nunca daemon/IDE)
             $candidates = Get-CimInstance Win32_Process -Filter "Name = 'java.exe'" -ErrorAction SilentlyContinue | Where-Object {
-                $_.CommandLine -notlike "*redhat.java*"
+                $_.CommandLine -notlike "*redhat.java*" -and $_.CommandLine -like "*-Dfabric*"
             }
             if ($candidates) {
                 $javaProc = Get-Process -Id $candidates[0].ProcessId -ErrorAction SilentlyContinue
@@ -199,12 +218,20 @@ try {
         if (Test-Path "src/main/resources/fabric.mod.json") {
             Rename-Item -Path "src/main/resources/fabric.mod.json" -NewName "fabric.mod.json.disabled" -Force
         }
+        # Residuo compilado (task Copy do Gradle nao apaga saidas orfas):
+        # sem isto, o teste "vanilla" pode carregar o mod salvo em execucoes anteriores.
+        if (Test-Path "build/resources/main/fabric.mod.json") {
+            Rename-Item -Path "build/resources/main/fabric.mod.json" -NewName "fabric.mod.json.disabled" -Force
+        }
         if (Test-Path "run/mods") {
             Remove-Item -Path "run/mods/*" -Recurse -Force -ErrorAction SilentlyContinue
         }
     } -AfterLaunch {
         if (Test-Path "src/main/resources/fabric.mod.json.disabled") {
             Rename-Item -Path "src/main/resources/fabric.mod.json.disabled" -NewName "fabric.mod.json" -Force
+        }
+        if (Test-Path "build/resources/main/fabric.mod.json.disabled") {
+            Rename-Item -Path "build/resources/main/fabric.mod.json.disabled" -NewName "fabric.mod.json" -Force
         }
     }
 
@@ -234,6 +261,9 @@ try {
             if (Test-Path "src/main/resources/fabric.mod.json.disabled") {
                 Rename-Item -Path "src/main/resources/fabric.mod.json.disabled" -NewName "fabric.mod.json" -Force
             }
+            if (Test-Path "build/resources/main/fabric.mod.json.disabled") {
+                Rename-Item -Path "build/resources/main/fabric.mod.json.disabled" -NewName "fabric.mod.json" -Force
+            }
         }
     } else {
         Write-Host "`n[Benchmark] Nenhum mod externo encontrado em benchmark/mods/. Pulando teste comparativo de mods externos." -ForegroundColor Yellow
@@ -259,6 +289,22 @@ try {
     if (Test-Path "src/main/resources/fabric.mod.json.disabled") {
         Rename-Item -Path "src/main/resources/fabric.mod.json.disabled" -NewName "fabric.mod.json" -Force
     }
+    if (Test-Path "build/resources/main/fabric.mod.json.disabled") {
+        Rename-Item -Path "build/resources/main/fabric.mod.json.disabled" -NewName "fabric.mod.json" -Force
+    }
+
+    # Limpeza de residuos: evita que sessoes seguintes do usuario carreguem
+    # o fps-recorder ou o mundo de benchmark sem saber (contaminacao de benchmark anterior)
+    if (Test-Path "run/mods/fps-recorder-1.0.0.jar") {
+        Remove-Item -Path "run/mods/fps-recorder-1.0.0.jar" -Force -ErrorAction SilentlyContinue
+    }
+    if (Test-Path "run/saves/benchmark_world") {
+        Remove-Item -Path "run/saves/benchmark_world" -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    if (Test-Path "run/benchmark_fps.csv") {
+        Remove-Item -Path "run/benchmark_fps.csv" -Force -ErrorAction SilentlyContinue
+    }
+    Write-Host "[Benchmark] Limpeza de residuos concluida (run/mods e run/saves restaurados)." -ForegroundColor Gray
 }
 
 # ==============================================================
@@ -298,9 +344,10 @@ function Get-Averages {
 
             if ($fpsList -and $fpsList.Count -gt 0) {
                 $avgFps = [math]::Round(($fpsList | Measure-Object -Average).Average, 1)
-                $lowIndex = [math]::Floor($fpsList.Count * 0.01)
-                if ($lowIndex -ge $fpsList.Count) { $lowIndex = $fpsList.Count - 1 }
-                $onePercentLow = [math]::Round($fpsList[$lowIndex], 1)
+                # 1% Low = media dos 1% piores momentos (lista ordenada crescente)
+                $lowCount = [math]::Max(1, [math]::Floor($fpsList.Count * 0.01))
+                $lowSamples = @($fpsList | Select-Object -First $lowCount)
+                $onePercentLow = [math]::Round(($lowSamples | Measure-Object -Average).Average, 1)
             }
         }
     }
