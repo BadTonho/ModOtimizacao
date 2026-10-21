@@ -105,7 +105,7 @@ Plano de execução passo a passo para o desenvolvimento do mod de otimização 
 - [x] **Granularidade de performance:** zero alocação por entidade/BE/frame (sem `new Vec3`, `Direction[]` estático, `Set` de isenções pré-resolvido, distância calculada 1×).
 - [x] **Manifestação de limites (ferramenta fps-recorder):** satisfaz contexto de benchmark separado do JAR principal; validada a existência de `BackupConfirmScreen.onProceed` no JAR 26.3 via `javap`.
 - [x] **F3 completo:** linha de diagnóstico com `Anims/HUD/BE-Cull/Ent-Cull/Part-Limit` (antes faltava 2/2).
-- [x] **LICENSE MIT** incluída no repositório e no JAR; `gradle.properties` sincronizado (removida a variável yarn_mappings morta; corrigida a propriedade `archives_base_name` no Gradle 9).
+- [x] **LICENSE LGPL-3.0** incluída no repositório e no JAR; `gradle.properties` sincronizado (removida a variável yarn_mappings morta; corrigida a propriedade `archives_base_name` no Gradle 9).
 
 **Ferramentas da auditoria:** `gradlew clean build` (Java 25), `javap` contra o JAR oficial `minecraft-merged-26.3-*.jar`, parser de sintaxe PowerShell e revisão linha a linha dos 45 arquivos Java.
 

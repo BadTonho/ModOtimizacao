@@ -10,7 +10,7 @@
   "contact": {
     "homepage": "https://github.com/BadTonho/ModOtimizacao"
   },
-  "license": "MIT",
+  "license": "LGPL-3.0",
   "icon": "assets/modotimizacao/icon.png",
   "environment": "client",
   "entrypoints": {
