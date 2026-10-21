@@ -4,9 +4,11 @@ import com.modotimizacao.config.ModConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.phys.AABB;
 
 /**
  * Motor de culling de entidades ultra-rápido (Zero Raycasts, O(1)).
@@ -63,9 +65,25 @@ public final class EntityCuller {
             return false;
         }
 
-        // 4. Limite de Distância Máxima (Configurável; default Ilimitado = vanilla)
+        // 4. Limite de Distância Máxima (Configurável; default Ilimitado = vanilla).
+        //    Fase 8: distância medida até o PONTO MAIS PRÓXIMO da hitbox (clamp da
+        //    câmera no envelope da AABB, zero alocação) — mobs grandes (Ghast,
+        //    Ravager) não sofrem pop-in/out na borda do limite. Teste estritamente
+        //    MAIS conservador que a distância ponto-a-ponto da câmera ao centro:
+        //    só oculta quando a hitbox INTEIRA passa do limite (Regra 4).
+        //    O sentinel "Ilimitado" (1.0E9) continua nunca ocultando.
         double maxDist = ModConfig.getInstance().entityMaxDistance;
-        if (distSq > maxDist * maxDist) {
+        AABB box = entity.getBoundingBox();
+        if (box == null) {
+            return false; // fail-safe: sem hitbox não há culling
+        }
+        double nearX = Mth.clamp(camX, box.minX, box.maxX);
+        double nearY = Mth.clamp(camY, box.minY, box.maxY);
+        double nearZ = Mth.clamp(camZ, box.minZ, box.maxZ);
+        double ndx = camX - nearX;
+        double ndy = camY - nearY;
+        double ndz = camZ - nearZ;
+        if (ndx * ndx + ndy * ndy + ndz * ndz > maxDist * maxDist) {
             return true;
         }
 
