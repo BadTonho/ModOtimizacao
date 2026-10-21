@@ -111,6 +111,20 @@ Plano de execução passo a passo para o desenvolvimento do mod de otimização 
 
 ---
 
+## ⚡ Fase 8: Otimizações de Runtime e Workflow — ✅ CONCLUÍDO
+**Objetivo:** Segunda análise completa, focada em melhorias e otimizações: cache real por frame, eliminação de alocações residuais no hot loop, culling de entidades por hitbox e workflow de build mais rápido.
+
+- [x] **Workflow de build:** `org.gradle.parallel` + `org.gradle.caching` + `org.gradle.configuration-cache` ativados (build reusa cache de configuração em ~1s); compatibilidade do configuration cache garantida em `:jar`/`:processResources` (closures de copy-spec capturadas em tempo de configuração, nunca em execução); plugin `maven-publish` sem configuração removido.
+- [x] **`FrameTracker` (`modules/core/`):** ponto único de sincronização por frame via `MixinLevelRenderer.prepareChunkRenders` (chamada incondicional, custo amortizado O(1)); coordena `AnimationTracker` (sprites animados visíveis) + `ParticleCullCache` (oclusão de partículas), ambos com estado exclusivo da thread de render/main.
+- [x] **`ParticleCullCache` real (Fase 8):** o conceito removido na Fase 7 por ser órfão foi refeito **com uso real**: consultado por `ParticleCuller.isOccluded` — chave `BlockPos.asLong`, valor empacotado `(frameId << 1) | bitOclusao` (resultado "stale" impossível no cache ativo), double-buffer trocado por frame (memória limitada a ~2 rodadas, clear amortizado nunca pago no frame em curso). Partículas do mesmo bloco no mesmo frame compartilham UMA consulta `getBlockState` (hit rate alto em chuva/neve/explosões).
+- [x] **Coluna de caverna com 1 fetch de chunk (`EntityCuller`):** coluna vertical nunca cruza chunks (x/z fixos) — `LevelChunk` resolvido UMA vez e seções iteradas via `chunk.getBlockState` (16× menos resoluções de chunk por mob subterrâneo; comportamento idêntico ao `level.getBlockState`).
+- [x] **Zero alocações residuais (Pacote 3):** `ParticleLimiter` sem `box.getCenter()` (centro da AABB em matemática manual `(min+max)*0.5`); `ParticleCuller`/`EntityCuller`/`BlockEntityCuller` com `MutableBlockPos` estáticos reutilizáveis e aritmética manual para faces/anel ±1 (6 a 32 alocações a menos por BlockEntity por frame), todos documentados como confinados à thread de render/main.
+- [x] **Culling de entidades por hitbox (Pacote 4):** o limite de distância mede o PONTO MAIS PRÓXIMO da AABB (clamp da câmera no envelope, zero alocação) — anti pop-in/out para mobs grandes (Ghast, Ravager); teste estritamente mais conservador (só oculta quando a hitbox inteira passa do limite); proximidade 2.5/12 blocos preservada ponto-a-ponto.
+- [x] **Decisão deliberada (fidelidade, Regra 4):** NÃO existe cache de entidades entre frames — `shouldRender` roda 1×/frame/entidade (cache intra-frame não ganha nada) e cache inter-frame exigiria invalidação por atualização de bloco (janela de "stale invisível" após quebrar paredes). Em vez disso, o scan interno ganhou o fetch único de chunk acima.
+- [x] Compilação `./gradlew.bat build` validada no Java 25 com configuration cache e empacotamento no JAR verificado.
+
+---
+
 ## 📋 Critérios de Aceite para Cada Etapa
 1. Segue as 5 regras de [REGRAS_DO_PROJETO.md](file:///c:/Users/Admin/Desktop/ProjetosCode/minecraft/ModOtimização/REGRAS_DO_PROJETO.md).
 2. Não quebra compilação nem gera warnings de Mixin.
