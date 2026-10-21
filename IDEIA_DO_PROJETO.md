@@ -52,6 +52,8 @@ O desenvolvimento segue estritamente as regras definidas em [REGRAS_DO_PROJETO.m
 4. **Fidelidade Vanilla Absoluta:** Jamais remover funções, mecânicas ou recursos visuais do jogo; a otimização deve ser 100% transparente.
 5. **Estritamente Client-Side:** O mod nunca altera blocos, chunks, itens, rede ou o estado do mundo. Totalmente seguro contra corrupção de mundos ou dessincronização em servidores.
 
+A **documentação geral para usuários e publicação** (instalação, recursos, configuração in-game, build, benchmark e estrutura) vive no [README.md](file:///c:/Users/Admin/Desktop/ProjetosCode/minecraft/ModOtimização/README.md).
+
 ---
 
 ## 🗺️ 5. Plano de Execução
