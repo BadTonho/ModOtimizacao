@@ -140,6 +140,8 @@ ModOtimizacao/
 │   └── benchmark/               # fps-recorder (dev; excluído do JAR principal)
 ├── benchmark/                   # Suíte de benchmark (collector.ps1 + ferramenta)
 ├── benchmark.ps1 / runVanilla.bat
+├── ARQUITETURA.md               # Índice da arquitetura (docs por função)
+├── docs/arquitetura/            # Um documento técnico por função (9 arquivos)
 ├── IDEIA_DO_PROJETO.md          # Visão, arquitetura e histórico de decisões
 ├── ROADMAP.md                   # Fases 1–8 detalhadas e concluídas
 ├── REGRAS_DO_PROJETO.md         # As 5 regras fundamentais
@@ -172,6 +174,7 @@ ModOtimizacao/
 |---|---|
 | [IDEIA_DO_PROJETO.md](IDEIA_DO_PROJETO.md) | Visão geral, pilares de otimização, histórico de decisões (fonte da verdade) |
 | [ROADMAP.md](ROADMAP.md) | Fases 1–8 detalhadas com status ✅ e critérios de aceite |
+| [ARQUITETURA.md](ARQUITETURA.md) | **Documentação técnica da arquitetura, separada por funções** (índice + 9 documentos em `docs/arquitetura/`) |
 | [REGRAS_DO_PROJETO.md](REGRAS_DO_PROJETO.md) | As 5 regras fundamentais (obrigatórias para contribuição) |
 | [BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md) | Relatório completo da suíte de benchmarks |
 | [benchmark/README.md](benchmark/README.md) | Como usar a suíte de benchmark |

@@ -57,7 +57,7 @@ A **documentação geral para usuários e publicação** (instalação, recursos
 ---
 
 ## 🗺️ 5. Plano de Execução
-O detalhamento passo a passo de cada fase de implementação, critérios de aceite e ordem de desenvolvimento está documentado em [ROADMAP.md](file:///c:/Users/Admin/Desktop/ProjetosCode/minecraft/ModOtimização/ROADMAP.md).
+O detalhamento passo a passo de cada fase de implementação, critérios de aceite e ordem de desenvolvimento está documentado em [ROADMAP.md](file:///c:/Users/Admin/Desktop/ProjetosCode/minecraft/ModOtimização/ROADMAP.md). A documentação técnica da arquitetura — **separada por funções** (bootstrap/frame, animações, culling de BlockEntities/entidades, partículas, fontes/HUD, configuração/GUI, benchmark e referência de mixins) — vive no [ARQUITETURA.md](file:///c:/Users/Admin/Desktop/ProjetosCode/minecraft/ModOtimização/ARQUITETURA.md) e em [docs/arquitetura/](file:///c:/Users/Admin/Desktop/ProjetosCode/minecraft/ModOtimização/docs/arquitetura).
 
 ---
 
