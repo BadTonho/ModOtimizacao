@@ -93,19 +93,25 @@ public class ModConfigScreen extends Screen {
         ).bounds(leftCol, startY + spacing * 3, buttonWidth, buttonHeight).build());
 
         this.addRenderableWidget(Button.builder(
-                Component.literal("Distância de Culling: " + (int) config.blockEntityMaxDistance + " blocos"),
+                Component.literal("Distância de Culling: " + distanceLabel(config.blockEntityMaxDistance)),
                 btn -> {
-                    if (config.blockEntityMaxDistance == 32.0) {
-                        config.blockEntityMaxDistance = 64.0;
-                        config.entityMaxDistance = 64.0;
-                    } else if (config.blockEntityMaxDistance == 64.0) {
-                        config.blockEntityMaxDistance = 96.0;
-                        config.entityMaxDistance = 96.0;
+                    // Ciclo: Ilimitado (vanilla) -> 96 -> 64 -> 32 -> Ilimitado
+                    double current = config.blockEntityMaxDistance;
+                    double next;
+                    if (current >= 1.0E8) {
+                        next = 96.0;
+                    } else if (current >= 96.0) {
+                        next = 64.0;
+                    } else if (current >= 64.0) {
+                        next = 32.0;
+                    } else if (current >= 32.0) {
+                        next = 1.0E9;
                     } else {
-                        config.blockEntityMaxDistance = 32.0;
-                        config.entityMaxDistance = 32.0;
+                        next = 96.0; // valores fora do ciclo voltam ao inicio
                     }
-                    btn.setMessage(Component.literal("Distância de Culling: " + (int) config.blockEntityMaxDistance + " blocos"));
+                    config.blockEntityMaxDistance = next;
+                    config.entityMaxDistance = next;
+                    btn.setMessage(Component.literal("Distância de Culling: " + distanceLabel(next)));
                 }
         ).bounds(rightCol, startY + spacing * 3, buttonWidth, buttonHeight).build());
 
@@ -130,5 +136,15 @@ public class ModConfigScreen extends Screen {
         if (this.minecraft != null) {
             this.minecraft.setScreenAndShow(this.parent);
         }
+    }
+
+    /**
+     * Formata a distância de culling para exibição na GUI.
+     */
+    private static String distanceLabel(double distance) {
+        if (distance >= 1.0E8) {
+            return "Ilimitado (Vanilla)";
+        }
+        return (int) distance + " blocos";
     }
 }

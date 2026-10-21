@@ -72,14 +72,29 @@ public final class ConfigManager {
         ModConfig target = ModConfig.getInstance();
         target.pauseHiddenAnimations = source.pauseHiddenAnimations;
         target.enableBlockEntityCulling = source.enableBlockEntityCulling;
-        target.blockEntityMaxDistance = source.blockEntityMaxDistance > 0 ? source.blockEntityMaxDistance : 64.0;
+        // Valores <= 0 ou absurdamente altos sao normalizados para o sentinela "Ilimitado" (fidelidade vanilla)
+        target.blockEntityMaxDistance = normalizeDistance(
+                source.blockEntityMaxDistance, target.blockEntityMaxDistance);
         target.blockEntityOcclusionCulling = source.blockEntityOcclusionCulling;
         target.enableEntityCulling = source.enableEntityCulling;
-        target.entityMaxDistance = source.entityMaxDistance > 0 ? source.entityMaxDistance : 64.0;
+        target.entityMaxDistance = normalizeDistance(
+                source.entityMaxDistance, target.entityMaxDistance);
         target.entityOcclusionCulling = source.entityOcclusionCulling;
         target.optimizeFontAndHud = source.optimizeFontAndHud;
         target.optimizeParticles = source.optimizeParticles;
-        target.particleMaxDistance = source.particleMaxDistance > 0 ? source.particleMaxDistance : 48.0;
+        target.particleMaxDistance = normalizeDistance(
+                source.particleMaxDistance, target.particleMaxDistance);
         target.maxParticlesPerBlock = source.maxParticlesPerBlock > 0 ? source.maxParticlesPerBlock : 35;
+    }
+
+    /**
+     * Normaliza uma distância carregada do disco: válida (0 < d < 1.0E8) é preservada;
+     * caso contrário, mantém o default atual (sentinela "Ilimitado").
+     */
+    private static double normalizeDistance(double loaded, double fallback) {
+        if (loaded > 0 && loaded < 1.0E8) {
+            return loaded;
+        }
+        return fallback;
     }
 }

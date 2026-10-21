@@ -7,14 +7,26 @@ package com.modotimizacao.config;
 public final class ModConfig {
     public boolean pauseHiddenAnimations = true;
     public boolean enableBlockEntityCulling = true;
-    public double blockEntityMaxDistance = 64.0;
+    /**
+     * Distância de culling de BlockEntities.
+     * Default: 1.0E9 (sentinela "Ilimitado" — fidelidade vanilla absoluta, Regra 4).
+     * O usuário pode reduzir explicitamente na GUI; valores pequenos escondem
+     * BlockEntities visíveis e são um trade-off consciente.
+     */
+    public double blockEntityMaxDistance = 1.0E9;
     public boolean blockEntityOcclusionCulling = true;
     public boolean enableEntityCulling = true;
-    public double entityMaxDistance = 64.0;
+    /**
+     * Distância de culling de entidades. Default: 1.0E9 ("Ilimitado" — Regra 4).
+     */
+    public double entityMaxDistance = 1.0E9;
     public boolean entityOcclusionCulling = true;
     public boolean optimizeFontAndHud = true;
     public boolean optimizeParticles = true;
-    public double particleMaxDistance = 48.0;
+    /**
+     * Distância de culling de partículas. Default: 1.0E9 ("Ilimitado" — Regra 4).
+     */
+    public double particleMaxDistance = 1.0E9;
     public int maxParticlesPerBlock = 35;
 
     private static final ModConfig INSTANCE = new ModConfig();
